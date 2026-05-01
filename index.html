@@ -756,7 +756,16 @@ function parseText(text) {
 
 function extractMetric(text) {
   const lower = text.toLowerCase();
-  const nums = text.replace(',','.').match(/\d+\.?\d*/g)?.map(Number) || [];
+  // Словарь числительных
+  const words2num = {
+    'один':1,'одно':1,'два':2,'две':2,'три':3,'четыре':4,'пять':5,
+    'шесть':6,'семь':7,'семи':7,'восемь':8,'восьми':8,'девять':9,'девяти':9,'десять':10,'десяти':10
+  };
+  let processedText = lower;
+  for (const [word, num] of Object.entries(words2num)) {
+    processedText = processedText.replace(new RegExp('\\b'+word+'\\b','g'), num);
+  }
+  const nums = processedText.replace(',','.').match(/\d+\.?\d*/g)?.map(Number) || [];
   const num = nums[0];
   if (lower.includes('температур') && num) return {type:'temperature',value_primary:num,unit:'°C'};
   if (lower.includes('давлени') && nums.length>=2) return {type:'pressure',value_primary:nums[0],value_secondary:nums[1],unit:'мм рт.ст.'};
@@ -953,17 +962,11 @@ ${medsRows ? `<table><thead><tr><th>Дата и время</th><th>Лекарс�
 </body>
 </html>`;
 
-    // Скачать как HTML файл (работает на iOS и Android)
+    // Открыть в новой вкладке (работает на iOS Safari)
     const blob = new Blob([html], {type: 'text/html;charset=utf-8'});
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'FamilyPulse_' + new Date().toLocaleDateString('ru-RU').replace(/\./g,'-') + '.html';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    showToast('✓ Отчёт скачан!');
+    window.open(url, '_blank');
+    showToast('✓ Отчёт открыт!');
 
   } catch(e) {
     showToast('Ошибка: ' + e.message);
