@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>FamilyPulse</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+:root{
+  --bg:#F5F0E8;--card:#FFFCF7;--sage:#6B8F71;--sage-light:#D6E8D8;
+  --sage-dark:#3D5C42;--mic:#2D5A3D;--mic-shadow:#1A3626;
+  --coral:#D4785A;--amber:#C8924A;--amber-light:#F5E8D0;
+  --text:#2E2A24;--text-mid:#6B6560;--text-soft:#9E9890;--border:#E8E0D4;
+  --red:#C85A5A;--red-light:#FAEAEA;
+}
+html,body{height:100%;background:var(--bg);font-family:'Nunito',sans-serif;overflow:hidden;}
+
+.screen{position:fixed;inset:0;display:flex;flex-direction:column;background:var(--bg);transform:translateX(100%);transition:transform 0.3s ease;z-index:1;overflow:hidden;}
+.screen.active{transform:translateX(0);z-index:2;}
+.screen.prev{transform:translateX(-30%);}
+
+.top-bar{background:#E8F0E8;padding:48px 18px 14px;flex-shrink:0;}
+.top-bar-row{display:flex;justify-content:space-between;align-items:center;}
+.logo{font-size:18px;font-weight:800;color:var(--sage-dark);}
+.logo span{color:var(--coral);}
+.back-btn{background:none;border:none;color:var(--sage-dark);font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:4px;padding:4px 0;}
+.page-title{font-size:16px;font-weight:900;color:var(--text);margin-top:8px;}
+
+.scroll-content{flex:1;overflow-y:auto;padding:14px;-webkit-overflow-scrolling:touch;}
+
+.card{background:var(--card);border-radius:16px;border:1.5px solid var(--border);padding:14px;margin-bottom:10px;}
+.card.warn{background:#FFF8F2;border-color:#EAC9B4;}
+.card.success{background:#F0F8F0;border-color:#B8D0BA;}
+.card.danger{background:var(--red-light);border-color:#EAB4B4;}
+
+.section-label{font-size:10px;color:var(--text-soft);font-weight:700;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px;margin-top:4px;}
+
+.avatar{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;flex-shrink:0;}
+
+.btn{width:100%;padding:16px;border-radius:16px;border:none;font-family:'Nunito',sans-serif;font-size:15px;font-weight:800;cursor:pointer;transition:transform 0.1s,box-shadow 0.1s;display:flex;align-items:center;justify-content:center;gap:10px;}
+.btn-primary{background:var(--sage);color:#fff;box-shadow:0 5px 0 var(--sage-dark);}
+.btn-primary:active{transform:translateY(4px);box-shadow:0 1px 0 var(--sage-dark);}
+.btn-secondary{background:var(--card);color:var(--text);border:1.5px solid var(--border);box-shadow:0 4px 0 #C8C0B4;}
+.btn-secondary:active{transform:translateY(3px);box-shadow:0 1px 0 #C8C0B4;}
+.btn-coral{background:var(--coral);color:#fff;box-shadow:0 5px 0 #A85840;}
+.btn-coral:active{transform:translateY(4px);box-shadow:0 1px 0 #A85840;}
+.btn-sm{padding:10px 16px;font-size:13px;border-radius:12px;}
+
+.mic-zone{display:flex;flex-direction:column;align-items:center;padding:16px 0;}
+.mic-wrap{position:relative;width:90px;height:90px;display:flex;align-items:center;justify-content:center;}
+.mic-halo{position:absolute;border-radius:50%;pointer-events:none;}
+.mic-halo.outer{width:90px;height:90px;background:#C8DCC8;opacity:0.4;}
+.mic-halo.inner{width:72px;height:72px;background:#A8C8A8;opacity:0.35;}
+.mic-btn{width:62px;height:62px;border-radius:50%;background:var(--mic);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;position:relative;z-index:2;box-shadow:0 5px 0 var(--mic-shadow);transition:transform 0.12s,box-shadow 0.12s;}
+.mic-btn:active{transform:translateY(4px);box-shadow:0 1px 0 var(--mic-shadow);}
+.mic-btn.recording{background:var(--coral);box-shadow:0 5px 0 #A85840;animation:pulse 1s infinite;}
+@keyframes pulse{0%,100%{transform:scale(1);}50%{transform:scale(1.05);}}
+.mic-lbl{font-size:12px;font-weight:800;color:var(--mic);margin-top:10px;}
+.mic-hint{font-size:11px;color:var(--text-soft);margin-bottom:10px;text-align:center;}
+
+.toggle-row{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border);}
+.toggle-row:last-child{border-bottom:none;}
+.toggle{position:relative;width:44px;height:26px;flex-shrink:0;}
+.toggle input{opacity:0;width:0;height:0;position:absolute;}
+.toggle-track{position:absolute;inset:0;background:#C8C0B4;border-radius:13px;transition:background 0.2s;cursor:pointer;}
+.toggle input:checked+.toggle-track{background:var(--sage);}
+.toggle-thumb{position:absolute;top:3px;left:3px;width:20px;height:20px;background:#fff;border-radius:50%;transition:transform 0.2s;box-shadow:0 1px 3px rgba(0,0,0,0.2);pointer-events:none;}
+.toggle input:checked~.toggle-thumb{transform:translateX(18px);}
+
+.input-group{margin-bottom:12px;}
+.input-label{font-size:11px;font-weight:700;color:var(--text-mid);margin-bottom:5px;}
+.input-field{width:100%;padding:12px 14px;border-radius:12px;border:1.5px solid var(--border);background:var(--card);font-family:'Nunito',sans-serif;font-size:14px;font-weight:600;color:var(--text);outline:none;-webkit-appearance:none;}
+.input-field:focus{border-color:var(--sage);}
+
+.badge{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;border-radius:20px;padding:3px 9px;}
+.badge-green{background:var(--sage-light);color:var(--sage-dark);}
+.badge-amber{background:var(--amber-light);color:#7A5020;}
+.badge-red{background:var(--red-light);color:#8C3A3A;}
+.badge-dot{width:5px;height:5px;border-radius:50%;display:inline-block;}
+
+.nav-bar{background:var(--card);border-top:1.5px solid var(--border);padding:8px 0 20px;display:flex;justify-content:space-around;flex-shrink:0;}
+.nav-item{display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;padding:4px 12px;border:none;background:none;}
+.nav-icon{width:24px;height:24px;display:flex;align-items:center;justify-content:center;}
+.nav-label{font-size:10px;font-weight:700;color:var(--text-soft);}
+.nav-item.active .nav-label{color:var(--sage);}
+.nav-dot{width:4px;height:4px;border-radius:50%;background:var(--sage);}
+
+.toast{position:fixed;bottom:100px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--mic);color:#fff;padding:10px 20px;border-radius:20px;font-size:13px;font-weight:700;opacity:0;transition:all 0.3s;z-index:999;white-space:nowrap;pointer-events:none;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+.loader{display:flex;align-items:center;justify-content:center;padding:40px;color:var(--text-soft);font-size:13px;font-weight:600;}
+
+.metric-row{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border);}
+.metric-row:last-child{border-bottom:none;}
+.metric-icon{width:36px;height:36px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px;}
+.metric-val{font-size:20px;font-weight:900;color:var(--text);}
+.metric-unit{font-size:11px;color:var(--text-soft);}
+.metric-time{font-size:10px;color:var(--text-soft);margin-left:auto;text-align:right;}
+
+.med-row{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--border);}
+.med-row:last-child{border-bottom:none;}
+.med-check{width:32px;height:32px;border-radius:50%;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer;transition:all 0.2s;}
+.med-check.taken{background:var(--sage);border-color:var(--sage);}
+.med-name{font-size:14px;font-weight:800;color:var(--text);}
+.med-dosage{font-size:11px;color:var(--text-soft);}
+.med-time{font-size:11px;color:var(--text-soft);margin-left:auto;white-space:nowrap;}
+
+.onboard-hero{text-align:center;padding:60px 20px 30px;}
+.onboard-emoji{font-size:72px;margin-bottom:20px;}
+.onboard-title{font-size:28px;font-weight:900;color:var(--text);margin-bottom:10px;}
+.onboard-sub{font-size:14px;color:var(--text-mid);line-height:1.7;}
+
+.transcript-box{background:var(--sage-light);border-radius:12px;padding:12px 14px;margin:10px 0;font-size:14px;color:var(--sage-dark);font-weight:700;line-height:1.5;min-height:48px;}
+</style>
+</head>
+<body>
+
+<!-- ПАРОЛЬ -->
+<div id="password-screen" style="position:fixed;inset:0;background:#F5F0E8;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;padding:30px;">
+  <div style="font-size:52px;margin-bottom:16px;">🌿</div>
+  <div style="font-size:22px;font-weight:900;color:#3D5C42;margin-bottom:6px;">Family<span style="color:#D4785A">Pulse</span></div>
+  <div style="font-size:13px;color:#9E9890;margin-bottom:32px;">Закрытое тестирование</div>
+  <div style="width:100%;max-width:320px;">
+    <input id="pwd-input" type="password" placeholder="Введите пароль" 
+      style="width:100%;padding:14px 16px;border-radius:14px;border:1.5px solid #E8E0D4;background:#FFFCF7;font-family:'Nunito',sans-serif;font-size:15px;font-weight:600;color:#2E2A24;outline:none;margin-bottom:10px;box-sizing:border-box;"
+      onkeydown="if(event.key==='Enter')checkPwd()">
+    <div id="pwd-error" style="color:#C85A5A;font-size:12px;font-weight:700;text-align:center;margin-bottom:10px;display:none;">Неверный пароль</div>
+    <button onclick="checkPwd()" 
+      style="width:100%;padding:16px;border-radius:16px;border:none;background:#6B8F71;color:#fff;font-family:'Nunito',sans-serif;font-size:15px;font-weight:800;cursor:pointer;box-shadow:0 5px 0 #3D5C42;">
+      Войти
+    </button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- ОНБОРДИНГ -->
+<div class="screen active" id="screen-onboarding">
+  <div class="scroll-content" style="display:flex;flex-direction:column;justify-content:space-between;min-height:100%;">
+    <div class="onboard-hero">
+      <div class="onboard-emoji">🌿</div>
+      <div class="onboard-title">Family<span style="color:var(--coral)">Pulse</span></div>
+      <div class="onboard-sub">Здоровье всей семьи — в одном месте.<br>Голосовой ввод, напоминания, аналитика для врача.</div>
+    </div>
+    <div style="padding:0 14px 48px;display:flex;flex-direction:column;gap:10px;">
+      <div class="input-group">
+        <div class="input-label">Ваше имя</div>
+        <input class="input-field" id="ob-name" type="text" placeholder="Например, Татьяна">
+      </div>
+      <button class="btn btn-primary" onclick="startApp()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M12 5l7 7-7 7" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Начать
+      </button>
+      <button class="btn btn-secondary" onclick="goTo('main')">Войти (тест)</button>
+    </div>
+  </div>
+</div>
+
+<!-- ГЛАВНЫЙ ЭКРАН -->
+<div class="screen" id="screen-main">
+  <div class="top-bar">
+    <div class="top-bar-row">
+      <div class="logo">Family<span>Pulse</span></div>
+      <div style="font-size:11px;color:var(--text-soft);font-weight:600;" id="main-date"></div>
+    </div>
+    <div style="font-size:14px;font-weight:800;color:var(--text);margin-top:6px;" id="main-greeting">Добрый день 🌿</div>
+  </div>
+  <div class="scroll-content" id="main-content"><div class="loader">Загрузка...</div></div>
+  <div class="nav-bar">
+    <button class="nav-item active" id="nav-main" onclick="goTo('main')">
+      <div class="nav-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M3 9L12 2L21 9V20C21 20.6 20.6 21 20 21H15V15H9V21H4C3.4 21 3 20.6 3 20V9Z" fill="#6B8F71"/></svg></div>
+      <div class="nav-label" style="color:var(--sage);">Главная</div>
+      <div class="nav-dot"></div>
+    </button>
+    <button class="nav-item" id="nav-metrics" onclick="goTo('metrics')">
+      <div class="nav-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M3 12h4l2-6 4 12 2-6 2 3 2-3" stroke="#9E9890" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <div class="nav-label">Показатели</div>
+    </button>
+    <button class="nav-item" id="nav-history" onclick="goTo('history')">
+      <div class="nav-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="17" rx="3" stroke="#9E9890" stroke-width="1.5"/><path d="M3 9h18M8 2v4M16 2v4" stroke="#9E9890" stroke-width="1.5" stroke-linecap="round"/></svg></div>
+      <div class="nav-label">История</div>
+    </button>
+    <button class="nav-item" id="nav-settings" onclick="goTo('settings')">
+      <div class="nav-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="3" stroke="#9E9890" stroke-width="1.5"/><path d="M12 2v2M12 20v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M2 12h2M20 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" stroke="#9E9890" stroke-width="1.5" stroke-linecap="round"/></svg></div>
+      <div class="nav-label">Настройки</div>
+    </button>
+  </div>
+</div>
+
+<!-- КАРТОЧКА ЧЛЕНА СЕМЬИ -->
+<div class="screen" id="screen-member">
+  <div class="top-bar">
+    <div class="top-bar-row">
+      <button class="back-btn" onclick="goBack()">← Назад</button>
+      <button class="btn btn-primary btn-sm" style="width:auto;" onclick="goTo('voice')">🎤 Записать</button>
+    </div>
+    <div class="page-title" id="member-title">Участник</div>
+  </div>
+  <div class="scroll-content" id="member-content"><div class="loader">Загрузка...</div></div>
+</div>
+
+<!-- ГОЛОСОВОЙ ВВОД -->
+<div class="screen" id="screen-voice">
+  <div class="top-bar">
+    <div class="top-bar-row">
+      <button class="back-btn" onclick="goBack()">← Назад</button>
+    </div>
+    <div class="page-title">Голосовой ввод</div>
+  </div>
+  <div class="scroll-content">
+    <div class="mic-hint" style="margin-top:8px;">Нажмите и говорите. Например:<br>"Папа выпил Конкор" · "Температура 37.2"</div>
+    <div class="mic-zone">
+      <div class="mic-wrap">
+        <div class="mic-halo outer"></div>
+        <div class="mic-halo inner"></div>
+        <button class="mic-btn" id="voice-mic-btn" onclick="toggleRecording()">
+          <svg width="28" height="28" viewBox="0 0 36 36" fill="none">
+            <rect x="12" y="2" width="12" height="18" rx="6" fill="white"/>
+            <path d="M7 17C7 23.1 12 28 18 28C24 28 29 23.1 29 17" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+            <line x1="18" y1="28" x2="18" y2="33" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+            <line x1="13" y1="33" x2="23" y2="33" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+          </svg>
+        </button>
+      </div>
+      <div class="mic-lbl" id="mic-label">Говорить</div>
+    </div>
+
+    <div id="transcript-area" style="display:none;">
+      <div class="section-label">Распознано</div>
+      <div class="transcript-box" id="transcript-text"></div>
+      <div id="parsed-action" style="margin-bottom:12px;"></div>
+      <button class="btn btn-primary" onclick="confirmVoiceAction()">✓ Подтвердить и сохранить</button>
+      <button class="btn btn-secondary" style="margin-top:8px;" onclick="resetVoice()">Повторить</button>
+    </div>
+
+    <div style="margin-top:16px;">
+      <div class="section-label">Быстрые команды</div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;">
+        <button class="btn btn-secondary btn-sm" style="width:auto;" onclick="manualInput('лекарство')">💊 Лекарство</button>
+        <button class="btn btn-secondary btn-sm" style="width:auto;" onclick="manualInput('давление')">❤️ Давление</button>
+        <button class="btn btn-secondary btn-sm" style="width:auto;" onclick="manualInput('температура')">🌡️ Температура</button>
+        <button class="btn btn-secondary btn-sm" style="width:auto;" onclick="manualInput('самочувствие')">😊 Самочувствие</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ПОКАЗАТЕЛИ -->
+<div class="screen" id="screen-metrics">
+  <div class="top-bar">
+    <div class="top-bar-row">
+      <button class="back-btn" onclick="goBack()">← Назад</button>
+      <button class="btn btn-primary btn-sm" style="width:auto;" onclick="goTo('add-metric')">+ Добавить</button>
+    </div>
+    <div class="page-title">Показатели здоровья</div>
+  </div>
+  <div class="scroll-content" id="metrics-content"><div class="loader">Загрузка...</div></div>
+</div>
+
+<!-- ДОБАВИТЬ ПОКАЗАТЕЛЬ -->
+<div class="screen" id="screen-add-metric">
+  <div class="top-bar">
+    <div class="top-bar-row">
+      <button class="back-btn" onclick="goBack()">← Назад</button>
+    </div>
+    <div class="page-title">Новый показатель</div>
+  </div>
+  <div class="scroll-content">
+    <div class="input-group">
+      <div class="input-label">Кому</div>
+      <select class="input-field" id="metric-member"></select>
+    </div>
+    <div class="input-group">
+      <div class="input-label">Тип показателя</div>
+      <select class="input-field" id="metric-type" onchange="updateMetricForm()">
+        <option value="temperature">🌡️ Температура</option>
+        <option value="pressure">❤️ Давление</option>
+        <option value="pulse">💓 Пульс</option>
+        <option value="sugar">🩸 Сахар</option>
+        <option value="wellbeing">😊 Самочувствие (1–10)</option>
+      </select>
+    </div>
+    <div id="metric-fields">
+      <div class="input-group">
+        <div class="input-label">Значение (°C)</div>
+        <input class="input-field" id="metric-val1" type="number" step="0.1" placeholder="36.6" inputmode="decimal">
+      </div>
+    </div>
+    <div class="input-group">
+      <div class="input-label">Заметка (необязательно)</div>
+      <input class="input-field" id="metric-note" type="text" placeholder="Например: после приёма таблетки">
+    </div>
+    <button class="btn btn-primary" onclick="saveMetric()">Сохранить показатель</button>
+  </div>
+</div>
+
+<!-- ИСТОРИЯ -->
+<div class="screen" id="screen-history">
+  <div class="top-bar">
+    <div class="top-bar-row">
+      <button class="back-btn" onclick="goBack()">← Назад</button>
+      <button class="btn btn-secondary btn-sm" style="width:auto;" onclick="generatePDF()">📄 PDF врачу</button>
+    </div>
+    <div class="page-title">История событий</div>
+  </div>
+  <div class="scroll-content" id="history-content"><div class="loader">Загрузка...</div></div>
+</div>
+
+<!-- НАСТРОЙКИ -->
+<div class="screen" id="screen-settings">
+  <div class="top-bar">
+    <div class="top-bar-row">
+      <button class="back-btn" onclick="goBack()">← Назад</button>
+    </div>
+    <div class="page-title">Настройки</div>
+  </div>
+  <div class="scroll-content">
+    <div class="card">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;">
+        <div class="avatar" style="background:var(--sage-light);color:var(--sage-dark);width:52px;height:52px;font-size:16px;" id="settings-avatar">ТА</div>
+        <div>
+          <div style="font-size:16px;font-weight:900;color:var(--text);" id="settings-name">Татьяна</div>
+          <div style="font-size:12px;color:var(--text-soft);">Главный пользователь</div>
+        </div>
+      </div>
+      <div style="background:var(--sage-light);border-radius:10px;padding:10px 12px;">
+        <div style="font-size:11px;font-weight:700;color:var(--sage-dark);">Тариф</div>
+        <div style="font-size:13px;font-weight:800;color:var(--sage-dark);">Бесплатный тест · MVP 0.1</div>
+      </div>
+    </div>
+
+    <div class="section-label">Уведомления</div>
+    <div class="card">
+      <div class="toggle-row">
+        <div><div style="font-size:13px;font-weight:700;">Утренний дайджест</div><div style="font-size:11px;color:var(--text-soft);">Каждое утро в 8:00</div></div>
+        <label class="toggle"><input type="checkbox" checked><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+      </div>
+      <div class="toggle-row">
+        <div><div style="font-size:13px;font-weight:700;">Напоминание за 2 часа</div><div style="font-size:11px;color:var(--text-soft);">До приёма лекарства</div></div>
+        <label class="toggle"><input type="checkbox" checked><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+      </div>
+      <div class="toggle-row">
+        <div><div style="font-size:13px;font-weight:700;">Пропуск лекарства</div><div style="font-size:11px;color:var(--text-soft);">Если не отмечено вовремя</div></div>
+        <label class="toggle"><input type="checkbox" checked><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+      </div>
+    </div>
+
+    <div class="section-label">Данные</div>
+    <div class="card">
+      <button class="btn btn-secondary" style="margin-bottom:8px;" onclick="generatePDF()">📄 Скачать данные (PDF)</button>
+      <div style="font-size:11px;color:var(--text-soft);text-align:center;margin-top:4px;">Вы управляете своими данными 🌿</div>
+    </div>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://lnrnhllrrgoyxvcxpfoq.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_JXijRLIECLgWtOGWz7ksZQ_b35y_8No';
+const { createClient } = supabase;
+const db = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+const FAMILY_ID = '11111111-1111-1111-1111-111111111111';
+const ADMIN_ID  = '22222222-2222-2222-2222-222222222222';
+const PAPA_ID   = '33333333-3333-3333-3333-333333333333';
+
+const ICONS  = {temperature:'🌡️',pressure:'❤️',pulse:'💓',sugar:'🩸',wellbeing:'😊'};
+const UNITS  = {temperature:'°C',pressure:'мм рт.ст.',pulse:'уд/мин',sugar:'ммоль/л',wellbeing:'/10'};
+const NAMES  = {temperature:'Температура',pressure:'Давление',pulse:'Пульс',sugar:'Сахар',wellbeing:'Самочувствие'};
+
+let state = {
+  screenStack: [],
+  currentScreen: 'onboarding',
+  currentMemberId: PAPA_ID,
+  isRecording: false,
+  mediaRecorder: null,
+  audioChunks: [],
+  pendingText: null
+};
+
+// --- НАВИГАЦИЯ ---
+function goTo(name) {
+  if (name === state.currentScreen) return;
+  const prev = document.getElementById('screen-' + state.currentScreen);
+  const next = document.getElementById('screen-' + name);
+  if (!next) return;
+  if (prev) { prev.classList.remove('active'); prev.classList.add('prev'); }
+  next.classList.add('active');
+  setTimeout(() => { if (prev) prev.classList.remove('prev'); }, 350);
+  state.screenStack.push(state.currentScreen);
+  state.currentScreen = name;
+
+  if (name === 'main')       loadMain();
+  if (name === 'metrics')    loadMetrics();
+  if (name === 'history')    loadHistory();
+  if (name === 'add-metric') loadMemberSelect();
+}
+
+function goBack() {
+  if (!state.screenStack.length) return;
+  const prev = state.screenStack.pop();
+  document.getElementById('screen-' + state.currentScreen).classList.remove('active');
+  const back = document.getElementById('screen-' + prev);
+  back.classList.remove('prev');
+  back.classList.add('active');
+  state.currentScreen = prev;
+}
+
+// --- ОНБОРДИНГ ---
+function startApp() {
+  const name = document.getElementById('ob-name').value.trim() || 'Татьяна';
+  localStorage.setItem('fp_name', name);
+  applyName(name);
+  goTo('main');
+}
+
+function applyName(name) {
+  const h = new Date().getHours();
+  const gr = h < 12 ? 'Доброе утро' : h < 18 ? 'Добрый день' : 'Добрый вечер';
+  document.getElementById('main-greeting').textContent = gr + ', ' + name + ' 🌿';
+  document.getElementById('settings-name').textContent = name;
+  document.getElementById('settings-avatar').textContent = name.slice(0,2).toUpperCase();
+}
+
+// --- ГЛАВНЫЙ ЭКРАН ---
+async function loadMain() {
+  const el = document.getElementById('main-content');
+  el.innerHTML = '<div class="loader">Загрузка...</div>';
+  try {
+    const { data: members } = await db.from('members').select('*').eq('family_id', FAMILY_ID);
+    let html = '<div class="section-label">Наша семья</div>';
+    for (const m of members || []) {
+      const { data: meds } = await db.from('medications').select('*').eq('member_id', m.id).eq('is_active', true);
+      const today = new Date().toISOString().split('T')[0];
+      const { data: logs } = await db.from('medication_logs').select('*').eq('member_id', m.id).gte('created_at', today + 'T00:00:00');
+      const total = (meds||[]).reduce((s,med) => s + (med.times||[]).length, 0);
+      const taken = (logs||[]).filter(l => l.status === 'taken').length;
+      const ok = total === 0 || taken >= total;
+      const initials = m.name.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+      html += `<div class="card ${ok?'':'warn'}" style="cursor:pointer;display:flex;align-items:center;gap:12px;" onclick="openMember('${m.id}','${m.name}')">
+        <div class="avatar" style="background:${m.avatar_color}22;color:${m.avatar_color};">${initials}</div>
+        <div style="flex:1;">
+          <div style="font-size:14px;font-weight:800;">${m.name}</div>
+          <div style="font-size:11px;color:var(--text-soft);">${total > 0 ? taken+' из '+total+' лекарств' : 'Нет лекарств'}</div>
+        </div>
+        <span class="badge ${ok?'badge-green':'badge-amber'}">
+          <span class="badge-dot" style="background:${ok?'var(--sage)':'var(--amber)'};"></span>
+          ${ok?'В норме':'Внимание'}
+        </span>
+      </div>`;
+    }
+
+    // Последние показатели
+    const { data: metrics } = await db.from('health_metrics').select('*').eq('member_id', PAPA_ID).order('recorded_at',{ascending:false}).limit(3);
+    if (metrics && metrics.length) {
+      html += '<div class="section-label" style="margin-top:12px;">Показатели · Папа</div><div class="card">';
+      for (const m of metrics) {
+        const val = m.type==='pressure' ? m.value_primary+'/'+m.value_secondary : m.value_primary;
+        const t = new Date(m.recorded_at).toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'});
+        html += `<div class="metric-row"><div class="metric-icon" style="background:var(--sage-light);">${ICONS[m.type]||'📊'}</div><div style="flex:1;"><div style="font-size:11px;color:var(--text-soft);">${NAMES[m.type]||m.type}</div><div><span class="metric-val" style="font-size:18px;">${val}</span> <span class="metric-unit">${UNITS[m.type]||''}</span></div></div><div class="metric-time">${t}</div></div>`;
+      }
+      html += '</div>';
+    }
+
+    html += `<button class="btn btn-primary" style="margin-top:8px;" onclick="goTo('voice')">
+      <svg width="20" height="20" viewBox="0 0 36 36" fill="none"><rect x="12" y="2" width="12" height="18" rx="6" fill="white"/><path d="M7 17C7 23.1 12 28 18 28C24 28 29 23.1 29 17" stroke="white" stroke-width="2.5" stroke-linecap="round"/><line x1="18" y1="28" x2="18" y2="34" stroke="white" stroke-width="2.5" stroke-linecap="round"/><line x1="11" y1="34" x2="25" y2="34" stroke="white" stroke-width="2.5" stroke-linecap="round"/></svg>
+      Записать голосом
+    </button>`;
+    el.innerHTML = html;
+  } catch(e) { el.innerHTML = '<div class="card danger" style="font-size:13px;">Ошибка: ' + e.message + '</div>'; }
+}
+
+// --- КАРТОЧКА ЧЛЕНА ---
+async function openMember(id, name) {
+  state.currentMemberId = id;
+  document.getElementById('member-title').textContent = name;
+  goTo('member');
+  const el = document.getElementById('member-content');
+  el.innerHTML = '<div class="loader">Загрузка...</div>';
+  try {
+    const { data: meds } = await db.from('medications').select('*').eq('member_id', id).eq('is_active', true);
+    const today = new Date().toISOString().split('T')[0];
+    const { data: logs } = await db.from('medication_logs').select('*').eq('member_id', id).gte('created_at', today + 'T00:00:00');
+
+    // Определяем текущее время суток
+    const nowH = new Date().getHours();
+    const currentPeriod = nowH < 12 ? 'morning' : nowH < 17 ? 'day' : 'evening';
+    const periods = [
+      { key: 'morning', label: '🌅 Утро', emoji: '🌅', range: [6, 12],  color: '#FFF8F0', border: '#EAC9A0' },
+      { key: 'day',     label: '☀️ День',  emoji: '☀️', range: [12, 17], color: '#F0F8F0', border: '#B8D0BA' },
+      { key: 'evening', label: '🌙 Вечер', emoji: '🌙', range: [17, 24], color: '#F0F0F8', border: '#C0B8D0' },
+    ];
+
+    // Группируем лекарства по периодам
+    function getPeriod(timeStr) {
+      const h = parseInt(timeStr?.split(':')[0] || 8);
+      if (h < 12) return 'morning';
+      if (h < 17) return 'day';
+      return 'evening';
+    }
+
+    const grouped = { morning: [], day: [], evening: [] };
+    for (const med of (meds || [])) {
+      for (const time of (med.times || ['08:00'])) {
+        grouped[getPeriod(time)].push({ med, time });
+      }
+    }
+
+    let html = '<div class="section-label">Лекарства сегодня</div>';
+
+    if (!meds || !meds.length) {
+      html += '<div class="card"><div style="text-align:center;color:var(--text-soft);padding:16px;font-size:13px;">Лекарства не добавлены</div></div>';
+    } else {
+      for (const p of periods) {
+        const items = grouped[p.key];
+        if (!items.length) continue;
+        const isCurrent = p.key === currentPeriod;
+
+        html += `<div style="
+          background:${isCurrent ? p.color : 'var(--card)'};
+          border:2px solid ${isCurrent ? p.border : 'var(--border)'};
+          border-radius:18px;margin-bottom:10px;overflow:hidden;
+        ">
+          <div style="
+            padding:12px 16px 8px;
+            display:flex;align-items:center;gap:8px;
+            border-bottom:1px solid ${isCurrent ? p.border : 'var(--border)'};
+          ">
+            <span style="font-size:18px;">${p.emoji}</span>
+            <span style="font-size:13px;font-weight:900;color:var(--text);">${p.label}</span>
+            ${isCurrent ? '<span style="font-size:10px;font-weight:700;background:var(--sage);color:#fff;border-radius:20px;padding:2px 8px;margin-left:auto;">Сейчас</span>' : ''}
+          </div>`;
+
+        for (const { med, time } of items) {
+          const taken = (logs||[]).some(l => l.medication_id === med.id && l.status === 'taken');
+          html += `<div style="
+            display:flex;align-items:center;gap:14px;
+            padding:14px 16px;
+            border-bottom:1px solid ${isCurrent ? p.border : 'var(--border)'};
+          " class="med-item-row">
+            <div class="med-check ${taken?'taken':''}" onclick="toggleMed('${med.id}','${id}','${time}',this)" style="width:36px;height:36px;border-radius:50%;flex-shrink:0;">
+              ${taken?'<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M5 12L10 17L19 7" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>':''}
+            </div>
+            <div style="flex:1;">
+              <div style="font-size:15px;font-weight:800;color:var(--text);">${med.name}</div>
+              <div style="font-size:11px;color:var(--text-soft);margin-top:2px;">${med.notes||med.dosage||''}</div>
+            </div>
+            <div style="font-size:12px;color:var(--text-soft);font-weight:700;">${time}</div>
+          </div>`;
+        }
+        html += '</div>';
+      }
+    }
+
+    const { data: metrics } = await db.from('health_metrics').select('*').eq('member_id', id).order('recorded_at',{ascending:false}).limit(5);
+    html += '<div class="section-label" style="margin-top:12px;">Показатели</div>';
+    if (metrics && metrics.length) {
+      html += '<div class="card">';
+      for (const m of metrics) {
+        const val = m.type==='pressure' ? m.value_primary+'/'+m.value_secondary : m.value_primary;
+        const t = new Date(m.recorded_at).toLocaleDateString('ru-RU',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
+        html += `<div class="metric-row"><div class="metric-icon" style="background:var(--sage-light);">${ICONS[m.type]||'📊'}</div><div style="flex:1;"><div style="font-size:11px;color:var(--text-soft);">${NAMES[m.type]||m.type}</div><div><span class="metric-val" style="font-size:16px;">${val}</span> <span class="metric-unit">${UNITS[m.type]||''}</span></div></div><div class="metric-time">${t}</div></div>`;
+      }
+      html += '</div>';
+    } else {
+      html += '<div class="card"><div style="text-align:center;color:var(--text-soft);padding:12px;font-size:13px;">Нет записей</div></div>';
+    }
+    html += `<button class="btn btn-secondary" onclick="state.currentMemberId='${id}';goTo('add-metric')">+ Добавить показатель</button>`;
+    el.innerHTML = html;
+  } catch(e) { el.innerHTML = '<div class="card danger">'+e.message+'</div>'; }
+}
+
+// --- ОТМЕТИТЬ ЛЕКАРСТВО ---
+async function toggleMed(medId, memberId, time, el) {
+  const taken = el.classList.contains('taken');
+  try {
+    if (!taken) {
+      await db.from('medication_logs').insert({medication_id:medId, member_id:memberId, scheduled_time:time, taken_at:new Date().toISOString(), status:'taken'});
+      el.classList.add('taken');
+      el.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M5 12L10 17L19 7" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+      showToast('✓ Принято!');
+    } else {
+      await db.from('medication_logs').delete().eq('medication_id', medId).eq('member_id', memberId).eq('status','taken');
+      el.classList.remove('taken'); el.innerHTML = '';
+      showToast('Отметка снята');
+    }
+  } catch(e) { showToast('Ошибка: ' + e.message); }
+}
+
+// --- ПОКАЗАТЕЛИ ---
+async function loadMetrics() {
+  const el = document.getElementById('metrics-content');
+  try {
+    const { data } = await db.from('health_metrics').select('*').order('recorded_at',{ascending:false}).limit(30);
+    if (!data || !data.length) { el.innerHTML = '<div class="card"><div style="text-align:center;color:var(--text-soft);padding:20px;font-size:13px;">Нет данных. Нажмите + Добавить</div></div>'; return; }
+    let html = '<div class="card">';
+    for (const m of data) {
+      const val = m.type==='pressure' ? m.value_primary+'/'+m.value_secondary : m.value_primary;
+      const t = new Date(m.recorded_at).toLocaleDateString('ru-RU',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
+      html += `<div class="metric-row"><div class="metric-icon" style="background:var(--sage-light);">${ICONS[m.type]||'📊'}</div><div style="flex:1;"><div style="font-size:11px;color:var(--text-soft);">${NAMES[m.type]||m.type}${m.note?' · '+m.note:''}</div><div><span class="metric-val" style="font-size:16px;">${val}</span> <span class="metric-unit">${UNITS[m.type]||''}</span></div></div><div class="metric-time">${t}</div></div>`;
+    }
+    el.innerHTML = html + '</div>';
+  } catch(e) { el.innerHTML = '<div class="card danger">'+e.message+'</div>'; }
+}
+
+function updateMetricForm() {
+  const type = document.getElementById('metric-type').value;
+  const labels = {temperature:'Значение (°C)',pressure:'Верхнее давление (мм рт.ст.)',pulse:'Пульс (уд/мин)',sugar:'Сахар (ммоль/л)',wellbeing:'Самочувствие (1–10)'};
+  let html = `<div class="input-group"><div class="input-label">${labels[type]}</div><input class="input-field" id="metric-val1" type="number" step="0.1" inputmode="decimal" placeholder=""></div>`;
+  if (type === 'pressure') html += `<div class="input-group"><div class="input-label">Нижнее давление</div><input class="input-field" id="metric-val2" type="number" inputmode="numeric" placeholder="80"></div>`;
+  document.getElementById('metric-fields').innerHTML = html;
+}
+
+async function loadMemberSelect() {
+  const { data: members } = await db.from('members').select('*').eq('family_id', FAMILY_ID);
+  const sel = document.getElementById('metric-member');
+  sel.innerHTML = (members||[]).map(m=>`<option value="${m.id}">${m.name}</option>`).join('');
+  if (state.currentMemberId) sel.value = state.currentMemberId;
+}
+
+async function saveMetric() {
+  const type = document.getElementById('metric-type').value;
+  const val1 = parseFloat(document.getElementById('metric-val1')?.value);
+  const val2El = document.getElementById('metric-val2');
+  const val2 = val2El ? parseFloat(val2El.value) : null;
+  const note = document.getElementById('metric-note').value;
+  const memberId = document.getElementById('metric-member').value;
+  if (isNaN(val1)) { showToast('Введите значение'); return; }
+  try {
+    await db.from('health_metrics').insert({member_id:memberId, type, value_primary:val1, value_secondary:val2||null, unit:UNITS[type], note:note||null});
+    showToast('✓ Сохранено!');
+    goBack();
+  } catch(e) { showToast('Ошибка: '+e.message); }
+}
+
+// --- ИСТОРИЯ ---
+async function loadHistory() {
+  const el = document.getElementById('history-content');
+  try {
+    const { data: metrics } = await db.from('health_metrics').select('*').order('recorded_at',{ascending:false}).limit(20);
+    const { data: logs } = await db.from('medication_logs').select('*, medications(name)').order('created_at',{ascending:false}).limit(20);
+    const items = [
+      ...(metrics||[]).map(m=>({t:'metric',d:m,ts:new Date(m.recorded_at)})),
+      ...(logs||[]).map(l=>({t:'log',d:l,ts:new Date(l.created_at)}))
+    ].sort((a,b)=>b.ts-a.ts).slice(0,30);
+    if (!items.length) { el.innerHTML='<div class="card"><div style="text-align:center;color:var(--text-soft);padding:20px;font-size:13px;">История пуста</div></div>'; return; }
+    let html = '<div class="card">';
+    for (const i of items) {
+      const t = i.ts.toLocaleDateString('ru-RU',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
+      if (i.t === 'metric') {
+        const val = i.d.type==='pressure' ? i.d.value_primary+'/'+i.d.value_secondary : i.d.value_primary;
+        html += `<div class="metric-row"><div class="metric-icon" style="background:var(--sage-light);">${ICONS[i.d.type]||'📊'}</div><div style="flex:1;"><div style="font-size:11px;color:var(--text-soft);">${NAMES[i.d.type]||i.d.type}</div><div><span class="metric-val" style="font-size:16px;">${val}</span> <span class="metric-unit">${UNITS[i.d.type]||''}</span></div></div><div class="metric-time">${t}</div></div>`;
+      } else {
+        html += `<div class="metric-row"><div class="metric-icon" style="background:${i.d.status==='taken'?'var(--sage-light)':'var(--red-light)'};">💊</div><div style="flex:1;"><div style="font-size:11px;color:var(--text-soft);">${i.d.status==='taken'?'Принято':'Пропущено'}</div><div style="font-size:14px;font-weight:800;">${i.d.medications?.name||'Лекарство'}</div></div><div class="metric-time">${t}</div></div>`;
+      }
+    }
+    el.innerHTML = html + '</div>';
+  } catch(e) { el.innerHTML='<div class="card danger">'+e.message+'</div>'; }
+}
+
+// --- ГОЛОС ---
+async function toggleRecording() {
+  if (!state.isRecording) {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({audio:true});
+      state.mediaRecorder = new MediaRecorder(stream);
+      state.audioChunks = [];
+      state.mediaRecorder.ondataavailable = e => state.audioChunks.push(e.data);
+      state.mediaRecorder.onstop = processAudio;
+      state.mediaRecorder.start();
+      state.isRecording = true;
+      document.getElementById('voice-mic-btn').classList.add('recording');
+      document.getElementById('mic-label').textContent = 'Говорю... (нажмите стоп)';
+    } catch(e) {
+      showToast('Нет доступа к микрофону');
+      manualInput('голосовая запись');
+    }
+  } else {
+    state.mediaRecorder.stop();
+    state.mediaRecorder.stream.getTracks().forEach(t=>t.stop());
+    state.isRecording = false;
+    document.getElementById('voice-mic-btn').classList.remove('recording');
+    document.getElementById('mic-label').textContent = 'Обработка...';
+  }
+}
+
+async function processAudio() {
+  const WHISPER_WEBHOOK = 'https://hook.us2.make.com/9by8f53llchfcgsl2q8aj8i3e8ew8xff';
+  try {
+    const blob = new Blob(state.audioChunks, {type:'audio/webm'});
+    const formData = new FormData();
+    formData.append('audio', blob, 'voice.webm');
+    formData.append('member_id', state.currentMemberId || PAPA_ID);
+    const res = await fetch(WHISPER_WEBHOOK, {method:'POST', body: formData});
+    const data = await res.json();
+    const text = data.text || data.transcript || '';
+    if (text) { parseText(text); } else { showToast('Не удалось распознать речь'); }
+  } catch(e) { showToast('Ошибка связи с Make'); }
+  finally { document.getElementById('mic-label').textContent = 'Говорить'; }
+}
+
+function manualInput(hint) {
+  const text = prompt('Введите что записать' + (hint ? ' (' + hint + ')' : '') + ':');
+  if (text) parseText(text);
+}
+
+function parseText(text) {
+  document.getElementById('transcript-area').style.display = 'block';
+  document.getElementById('transcript-text').textContent = text;
+  const lower = text.toLowerCase();
+  let action = '📝 Сохранить заметку';
+  if (lower.includes('температур')) action = '🌡️ Записать температуру';
+  else if (lower.includes('давлени')) action = '❤️ Записать давление';
+  else if (lower.includes('принял')||lower.includes('выпил')||lower.includes('лекарств')) action = '💊 Отметить приём лекарства';
+  else if (lower.includes('самочувстви')||lower.includes('чувству')) action = '😊 Записать самочувствие';
+  else if (lower.includes('пульс')) action = '💓 Записать пульс';
+  document.getElementById('parsed-action').innerHTML = `<div class="card success" style="text-align:center;font-size:15px;font-weight:800;">${action}</div>`;
+  state.pendingText = text;
+}
+
+async function confirmVoiceAction() {
+  if (!state.pendingText) return;
+  try {
+    await db.from('voice_logs').insert({member_id: state.currentMemberId || PAPA_ID, transcript: state.pendingText, parsed_action:'manual', processed:false});
+    showToast('✓ Сохранено!');
+    resetVoice();
+  } catch(e) { showToast('Ошибка: '+e.message); }
+}
+
+function resetVoice() {
+  document.getElementById('transcript-area').style.display='none';
+  document.getElementById('transcript-text').textContent='';
+  document.getElementById('mic-label').textContent='Говорить';
+  state.pendingText = null;
+}
+
+// --- PDF ---
+function generatePDF() { showToast('PDF · подключите Make.com webhook'); }
+
+// --- TOAST ---
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2500);
+}
+
+// --- СТАРТ ---
+// --- ПАРОЛЬ ---
+function checkPwd() {
+  const input = document.getElementById('pwd-input').value;
+  const hash = btoa(unescape(encodeURIComponent(input)));
+  if (hash === btoa(unescape(encodeURIComponent('Мама2026!')))) {
+    document.getElementById('password-screen').style.display = 'none';
+    localStorage.setItem('fp_auth', '1');
+  } else {
+    document.getElementById('pwd-error').style.display = 'block';
+    document.getElementById('pwd-input').value = '';
+  }
+}
+
+window.addEventListener('load', () => {
+  if (sessionStorage.getItem('fp_auth') !== '1' && localStorage.getItem('fp_auth') !== '1') {
+    document.getElementById('password-screen').style.display = 'flex';
+  } else {
+    document.getElementById('password-screen').style.display = 'none';
+  }
+
+  const name = localStorage.getItem('fp_name') || 'Татьяна';
+  document.getElementById('ob-name').value = name;
+  applyName(name);
+  document.getElementById('main-date').textContent = new Date().toLocaleDateString('ru-RU',{day:'numeric',month:'long'});
+});
+</script>
+</body>
+</html>
