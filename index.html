@@ -660,46 +660,45 @@ async function loadHistory() {
 }
 
 // --- ГОЛОС ---
-async function toggleRecording() {
-  if (!state.isRecording) {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({audio:true});
-      state.mediaRecorder = new MediaRecorder(stream);
-      state.audioChunks = [];
-      state.mediaRecorder.ondataavailable = e => state.audioChunks.push(e.data);
-      state.mediaRecorder.onstop = processAudio;
-      state.mediaRecorder.start();
-      state.isRecording = true;
-      document.getElementById('voice-mic-btn').classList.add('recording');
-      document.getElementById('mic-label').textContent = 'Говорю... (нажмите стоп)';
-    } catch(e) {
-      showToast('Нет доступа к микрофону');
-      manualInput('голосовая запись');
-    }
-  } else {
-    state.mediaRecorder.stop();
-    state.mediaRecorder.stream.getTracks().forEach(t=>t.stop());
+function toggleRecording() {
+  if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+    showToast('Голосовой ввод не поддерживается этим браузером');
+    manualInput();
+    return;
+  }
+  if (state.isRecording) {
+    state.recognition.stop();
+    return;
+  }
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  state.recognition = new SpeechRecognition();
+  state.recognition.lang = 'ru-RU';
+  state.recognition.continuous = false;
+  state.recognition.interimResults = false;
+  state.recognition.onstart = () => {
+    state.isRecording = true;
+    document.getElementById('voice-mic-btn').classList.add('recording');
+    document.getElementById('mic-label').textContent = 'Говорю... (нажмите стоп)';
+  };
+  state.recognition.onresult = (e) => {
+    const text = e.results[0][0].transcript;
+    parseText(text);
+  };
+  state.recognition.onerror = (e) => {
+    showToast('Ошибка: ' + e.error);
+    resetVoice();
+  };
+  state.recognition.onend = () => {
     state.isRecording = false;
     document.getElementById('voice-mic-btn').classList.remove('recording');
-    document.getElementById('mic-label').textContent = 'Обработка...';
-  }
+    document.getElementById('mic-label').textContent = 'Говорить';
+  };
+  state.recognition.start();
 }
 
 async function processAudio() {
-  const WHISPER_WEBHOOK = 'https://hook.us2.make.com/9by8f53llchfcgsl2q8aj8i3e8ew8xff';
-  try {
-    const blob = new Blob(state.audioChunks, {type:'audio/webm'});
-    const formData = new FormData();
-    formData.append('audio', blob, 'voice.webm');
-    formData.append('member_id', state.currentMemberId || PAPA_ID);
-    const res = await fetch(WHISPER_WEBHOOK, {method:'POST', body: formData});
-    const data = await res.json();
-    const text = data.text || data.transcript || '';
-    if (text) { parseText(text); } else { showToast('Не удалось распознать речь'); }
-  } catch(e) { showToast('Ошибка связи с Make'); }
-  finally { document.getElementById('mic-label').textContent = 'Говорить'; }
+  document.getElementById('mic-label').textContent = 'Говорить';
 }
-
 function manualInput(hint) {
   const text = prompt('Введите что записать' + (hint ? ' (' + hint + ')' : '') + ':');
   if (text) parseText(text);
