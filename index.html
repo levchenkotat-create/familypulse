@@ -380,6 +380,7 @@ html,body{height:100%;background:var(--bg);font-family:'Nunito',sans-serif;overf
     <div class="section-label">Данные</div>
     <div class="card">
       <button class="btn btn-secondary" style="margin-bottom:8px;" onclick="generatePDF()">📄 Скачать данные (PDF)</button>
+      <div id="pdf-preview" style="display:none;margin-top:10px;"></div>
       <div style="font-size:11px;color:var(--text-soft);text-align:center;margin-top:4px;">Вы управляете своими данными 🌿</div>
     </div>
   </div>
@@ -962,11 +963,18 @@ ${medsRows ? `<table><thead><tr><th>Дата и время</th><th>Лекарс�
 </body>
 </html>`;
 
-    // Открыть в новой вкладке (работает на iOS Safari)
-    const blob = new Blob([html], {type: 'text/html;charset=utf-8'});
-    const url = URL.createObjectURL(blob);
-    window.open(url, '_blank');
-    showToast('✓ Отчёт открыт!');
+    // Показать отчёт прямо на странице
+    const reportWin = window.open('', '_blank');
+    if (reportWin) {
+      reportWin.document.write(html);
+      reportWin.document.close();
+      showToast('✓ Отчёт открыт!');
+    } else {
+      // Если браузер заблокировал — показываем внутри страницы
+      const div = document.getElementById('pdf-preview');
+      if (div) { div.innerHTML = html; div.style.display='block'; }
+      showToast('✓ Отчёт ниже');
+    }
 
   } catch(e) {
     showToast('Ошибка: ' + e.message);
