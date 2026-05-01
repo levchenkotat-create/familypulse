@@ -123,11 +123,11 @@ html,body{height:100%;background:var(--bg);font-family:'Nunito',sans-serif;overf
   <div style="font-size:22px;font-weight:900;color:#3D5C42;margin-bottom:6px;">Family<span style="color:#D4785A">Pulse</span></div>
   <div style="font-size:13px;color:#9E9890;margin-bottom:32px;">Закрытое тестирование</div>
   <div style="width:100%;max-width:320px;">
-    <input id="pwd-input" type="password" placeholder="Введите пароль" 
+    <input id="pwd-input" type="password" placeholder="Введите пароль"
       style="width:100%;padding:14px 16px;border-radius:14px;border:1.5px solid #E8E0D4;background:#FFFCF7;font-family:'Nunito',sans-serif;font-size:15px;font-weight:600;color:#2E2A24;outline:none;margin-bottom:10px;box-sizing:border-box;"
       onkeydown="if(event.key==='Enter')checkPwd()">
     <div id="pwd-error" style="color:#C85A5A;font-size:12px;font-weight:700;text-align:center;margin-bottom:10px;display:none;">Неверный пароль</div>
-    <button onclick="checkPwd()" 
+    <button onclick="checkPwd()"
       style="width:100%;padding:16px;border-radius:16px;border:none;background:#6B8F71;color:#fff;font-family:'Nunito',sans-serif;font-size:15px;font-weight:800;cursor:pointer;box-shadow:0 5px 0 #3D5C42;">
       Войти
     </button>
@@ -210,13 +210,13 @@ html,body{height:100%;background:var(--bg);font-family:'Nunito',sans-serif;overf
     <div class="page-title">Голосовой ввод</div>
   </div>
   <div class="scroll-content">
-    <div class="mic-hint" style="margin-top:8px;">Нажмите и говорите. Например:<br>"Папа выпил Конкор" · "Температура 37.2"</div>
-    <div class="mic-zone">
-      <div class="mic-wrap">
-        <div class="mic-halo outer"></div>
-        <div class="mic-halo inner"></div>
-        <button class="mic-btn" id="voice-mic-btn" onclick="toggleRecording()">
-          <svg width="28" height="28" viewBox="0 0 36 36" fill="none">
+    <!-- БОЛЬШОЙ МИКРОФОН -->
+    <div style="display:flex;flex-direction:column;align-items:center;padding:20px 0 10px;">
+      <div style="position:relative;width:130px;height:130px;display:flex;align-items:center;justify-content:center;">
+        <div style="position:absolute;width:130px;height:130px;border-radius:50%;background:#C8DCC8;opacity:0.35;pointer-events:none;"></div>
+        <div style="position:absolute;width:105px;height:105px;border-radius:50%;background:#A8C8A8;opacity:0.35;pointer-events:none;"></div>
+        <button class="mic-btn" id="voice-mic-btn" onclick="toggleRecording()" style="width:86px;height:86px;">
+          <svg width="40" height="40" viewBox="0 0 36 36" fill="none">
             <rect x="12" y="2" width="12" height="18" rx="6" fill="white"/>
             <path d="M7 17C7 23.1 12 28 18 28C24 28 29 23.1 29 17" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
             <line x1="18" y1="28" x2="18" y2="33" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
@@ -224,24 +224,54 @@ html,body{height:100%;background:var(--bg);font-family:'Nunito',sans-serif;overf
           </svg>
         </button>
       </div>
-      <div class="mic-lbl" id="mic-label">Говорить</div>
+      <div style="font-size:16px;font-weight:800;color:var(--mic);margin-top:12px;" id="mic-label">Нажмите и говорите</div>
     </div>
 
+    <!-- РАСПОЗНАНО -->
     <div id="transcript-area" style="display:none;">
       <div class="section-label">Распознано</div>
       <div class="transcript-box" id="transcript-text"></div>
-      <div id="parsed-action" style="margin-bottom:12px;"></div>
-      <button class="btn btn-primary" onclick="confirmVoiceAction()">✓ Подтвердить и сохранить</button>
+      <button class="btn btn-primary" style="margin-top:8px;" onclick="confirmVoiceAction()">✓ Сохранить</button>
       <button class="btn btn-secondary" style="margin-top:8px;" onclick="resetVoice()">Повторить</button>
     </div>
 
+    <!-- ПРИМЕРЫ КОМАНД -->
     <div style="margin-top:16px;">
-      <div class="section-label">Быстрые команды</div>
-      <div style="display:flex;flex-wrap:wrap;gap:8px;">
-        <button class="btn btn-secondary btn-sm" style="width:auto;" onclick="manualInput('лекарство')">💊 Лекарство</button>
-        <button class="btn btn-secondary btn-sm" style="width:auto;" onclick="manualInput('давление')">❤️ Давление</button>
-        <button class="btn btn-secondary btn-sm" style="width:auto;" onclick="manualInput('температура')">🌡️ Температура</button>
-        <button class="btn btn-secondary btn-sm" style="width:auto;" onclick="manualInput('самочувствие')">😊 Самочувствие</button>
+      <div class="section-label">Примеры команд</div>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+
+        <div style="background:var(--card);border:1.5px solid var(--border);border-radius:14px;padding:12px 14px;display:flex;align-items:center;gap:12px;" onclick="manualInput('лекарство')" style="cursor:pointer;">
+          <span style="font-size:22px;">💊</span>
+          <div>
+            <div style="font-size:13px;font-weight:800;color:var(--text);">Лекарство</div>
+            <div style="font-size:12px;color:var(--text-soft);">«Выпил Конкор» · «Принял Метипред»</div>
+          </div>
+        </div>
+
+        <div style="background:var(--card);border:1.5px solid var(--border);border-radius:14px;padding:12px 14px;display:flex;align-items:center;gap:12px;" onclick="manualInput('давление')">
+          <span style="font-size:22px;">❤️</span>
+          <div>
+            <div style="font-size:13px;font-weight:800;color:var(--text);">Давление</div>
+            <div style="font-size:12px;color:var(--text-soft);">«Давление 120 на 80»</div>
+          </div>
+        </div>
+
+        <div style="background:var(--card);border:1.5px solid var(--border);border-radius:14px;padding:12px 14px;display:flex;align-items:center;gap:12px;" onclick="manualInput('температура')">
+          <span style="font-size:22px;">🌡️</span>
+          <div>
+            <div style="font-size:13px;font-weight:800;color:var(--text);">Температура</div>
+            <div style="font-size:12px;color:var(--text-soft);">«Температура 37.2»</div>
+          </div>
+        </div>
+
+        <div style="background:var(--card);border:1.5px solid var(--border);border-radius:14px;padding:12px 14px;display:flex;align-items:center;gap:12px;" onclick="manualInput('самочувствие')">
+          <span style="font-size:22px;">😊</span>
+          <div>
+            <div style="font-size:13px;font-weight:800;color:var(--text);">Самочувствие</div>
+            <div style="font-size:12px;color:var(--text-soft);">«Самочувствие 8» · от 1 до 10, где 10 = отлично</div>
+          </div>
+        </div>
+
       </div>
     </div>
   </div>
@@ -357,7 +387,7 @@ html,body{height:100%;background:var(--bg);font-family:'Nunito',sans-serif;overf
 
 <script>
 const SUPABASE_URL = 'https://lnrnhllrrgoyxvcxpfoq.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_JXijRLIECLgWtOGWz7ksZQ_b35y_8No';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxucm5obGxycmdveXh2Y3hwZm9xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzczNTMwNTksImV4cCI6MjA5MjkyOTA1OX0.YF3XdiBe3VZSbn6Yp9Ytwm4Wg5WT_SVdW27vqrO5mUw';
 const { createClient } = supabase;
 const db = createClient(SUPABASE_URL, SUPABASE_KEY);
 
@@ -458,13 +488,13 @@ async function loadMain() {
       for (const m of metrics) {
         const val = m.type==='pressure' ? m.value_primary+'/'+m.value_secondary : m.value_primary;
         const t = new Date(m.recorded_at).toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'});
-        html += `<div class="metric-row"><div class="metric-icon" style="background:var(--sage-light);">${ICONS[m.type]||'📊'}</div><div style="flex:1;"><div style="font-size:11px;color:var(--text-soft);">${NAMES[m.type]||m.type}</div><div><span class="metric-val" style="font-size:18px;">${val}</span> <span class="metric-unit">${UNITS[m.type]||''}</span></div></div><div class="metric-time">${t}</div></div>`;
+        html += `<div class="metric-row"><div class="metric-icon" style="background:var(--sage-light);">${ICONS[m.type]||'📊'}</div><div style="flex:1;"><div style="font-size:11px;color:var(--text-soft);">${NAMES[m.type]||m.type}${m.note?' · '+m.note:''}</div><div><span class="metric-val" style="font-size:18px;">${val}</span> <span class="metric-unit">${UNITS[m.type]||''}</span></div></div><div class="metric-time">${t}</div></div>`;
       }
       html += '</div>';
     }
 
-    html += `<button class="btn btn-primary" style="margin-top:8px;" onclick="goTo('voice')">
-      <svg width="20" height="20" viewBox="0 0 36 36" fill="none"><rect x="12" y="2" width="12" height="18" rx="6" fill="white"/><path d="M7 17C7 23.1 12 28 18 28C24 28 29 23.1 29 17" stroke="white" stroke-width="2.5" stroke-linecap="round"/><line x1="18" y1="28" x2="18" y2="34" stroke="white" stroke-width="2.5" stroke-linecap="round"/><line x1="11" y1="34" x2="25" y2="34" stroke="white" stroke-width="2.5" stroke-linecap="round"/></svg>
+    html += `<button class="btn btn-primary" style="margin-top:8px;" onclick="state.currentMemberId=PAPA_ID;goTo('voice')">
+      <svg width="20" height="20" viewBox="0 0 36 36" fill="none"><rect x="12" y="2" width="12" height="18" rx="6" fill="white"/><path d="M7 17C7 23.1 12 28 18 28C24 28 29 23.1 29 17" stroke="white" stroke-width="2.5" stroke-linecap="round"/></svg>
       Записать голосом
     </button>`;
     el.innerHTML = html;
@@ -560,7 +590,7 @@ async function openMember(id, name) {
       for (const m of metrics) {
         const val = m.type==='pressure' ? m.value_primary+'/'+m.value_secondary : m.value_primary;
         const t = new Date(m.recorded_at).toLocaleDateString('ru-RU',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
-        html += `<div class="metric-row"><div class="metric-icon" style="background:var(--sage-light);">${ICONS[m.type]||'📊'}</div><div style="flex:1;"><div style="font-size:11px;color:var(--text-soft);">${NAMES[m.type]||m.type}</div><div><span class="metric-val" style="font-size:16px;">${val}</span> <span class="metric-unit">${UNITS[m.type]||''}</span></div></div><div class="metric-time">${t}</div></div>`;
+        html += `<div class="metric-row"><div class="metric-icon" style="background:var(--sage-light);">${ICONS[m.type]||'📊'}</div><div style="flex:1;"><div style="font-size:11px;color:var(--text-soft);">${NAMES[m.type]||m.type}${m.note?' · '+m.note:''}</div><div><span class="metric-val" style="font-size:16px;">${val}</span> <span class="metric-unit">${UNITS[m.type]||''}</span></div></div><div class="metric-time">${t}</div></div>`;
       }
       html += '</div>';
     } else {
@@ -691,13 +721,13 @@ function toggleRecording() {
   state.recognition.onend = () => {
     state.isRecording = false;
     document.getElementById('voice-mic-btn').classList.remove('recording');
-    document.getElementById('mic-label').textContent = 'Говорить';
+    document.getElementById('mic-label').textContent = 'Нажмите и говорите';
   };
   state.recognition.start();
 }
 
 async function processAudio() {
-  document.getElementById('mic-label').textContent = 'Говорить';
+  document.getElementById('mic-label').textContent = 'Нажмите и говорите';
 }
 function manualInput(hint) {
   const text = prompt('Введите что записать' + (hint ? ' (' + hint + ')' : '') + ':');
@@ -714,15 +744,128 @@ function parseText(text) {
   else if (lower.includes('принял')||lower.includes('выпил')||lower.includes('лекарств')) action = '💊 Отметить приём лекарства';
   else if (lower.includes('самочувстви')||lower.includes('чувству')) action = '😊 Записать самочувствие';
   else if (lower.includes('пульс')) action = '💓 Записать пульс';
-  document.getElementById('parsed-action').innerHTML = `<div class="card success" style="text-align:center;font-size:15px;font-weight:800;">${action}</div>`;
   state.pendingText = text;
+}
+
+function extractMetric(text) {
+  const lower = text.toLowerCase();
+  const nums = text.replace(',','.').match(/\d+\.?\d*/g)?.map(Number) || [];
+  const num = nums[0];
+  if (lower.includes('температур') && num) return {type:'temperature',value_primary:num,unit:'°C'};
+  if (lower.includes('давлени') && nums.length>=2) return {type:'pressure',value_primary:nums[0],value_secondary:nums[1],unit:'мм рт.ст.'};
+  if (lower.includes('давлени') && num) return {type:'pressure',value_primary:num,unit:'мм рт.ст.'};
+  if (lower.includes('пульс') && num) return {type:'pulse',value_primary:num,unit:'уд/мин'};
+  if (lower.includes('сахар') && num) return {type:'sugar',value_primary:num,unit:'ммоль/л'};
+  if ((lower.includes('самочувстви')||lower.includes('чувству')) && num) return {type:'wellbeing',value_primary:num,unit:'/10'};
+  return null;
+}
+
+// Нечёткое сравнение строк (расстояние Левенштейна)
+function levenshtein(a, b) {
+  const m = a.length, n = b.length;
+  const dp = Array.from({length:m+1}, (_,i) => Array.from({length:n+1}, (_,j) => i===0?j:j===0?i:0));
+  for(let i=1;i<=m;i++) for(let j=1;j<=n;j++)
+    dp[i][j] = a[i-1]===b[j-1] ? dp[i-1][j-1] : 1+Math.min(dp[i-1][j],dp[i][j-1],dp[i-1][j-1]);
+  return dp[m][n];
+}
+
+// Разбить текст на слова и найти лучшее совпадение с лекарством
+function fuzzyMatchMed(textWords, medName) {
+  const medWords = medName.toLowerCase().split(/\s+/);
+  let bestScore = Infinity;
+  for(const tw of textWords) {
+    if(tw.length < 3) continue;
+    for(const mw of medWords) {
+      if(mw.length < 3) continue;
+      // Прямое вхождение
+      if(tw.includes(mw.slice(0,4)) || mw.includes(tw.slice(0,4))) return 0;
+      // Расстояние Левенштейна для похожих по длине слов
+      if(Math.abs(tw.length - mw.length) <= 3) {
+        const dist = levenshtein(tw, mw);
+        const maxLen = Math.max(tw.length, mw.length);
+        const score = dist / maxLen;
+        if(score < bestScore) bestScore = score;
+      }
+    }
+  }
+  return bestScore;
+}
+
+async function findMedicationByName(text, memberId) {
+  const { data: meds } = await db.from('medications').select('*').eq('member_id', memberId).eq('is_active', true);
+  if (!meds || !meds.length) return null;
+  const lower = text.toLowerCase();
+  const textWords = lower.split(/[\s,\.!?]+/).filter(w => w.length >= 3);
+  
+  let bestMed = null;
+  let bestScore = Infinity;
+  
+  for (const med of meds) {
+    const score = fuzzyMatchMed(textWords, med.name);
+    if (score < bestScore) {
+      bestScore = score;
+      bestMed = med;
+    }
+  }
+  
+  // Порог совпадения: 0 = точное, до 0.4 = похожее
+  return bestScore <= 0.4 ? bestMed : null;
 }
 
 async function confirmVoiceAction() {
   if (!state.pendingText) return;
   try {
-    await db.from('voice_logs').insert({member_id: state.currentMemberId || PAPA_ID, transcript: state.pendingText, parsed_action:'manual', processed:false});
-    showToast('✓ Сохранено!');
+    const memberId = state.currentMemberId || PAPA_ID;
+    const text = state.pendingText;
+    const lower = text.toLowerCase();
+    await db.from('voice_logs').insert({member_id:memberId, transcript:text, parsed_action:'voice', processed:true});
+
+    // Проверить: это лекарство?
+    const isMed = lower.includes('принял') || lower.includes('выпил') || lower.includes('принята') || lower.includes('лекарств');
+    if (isMed) {
+      const med = await findMedicationByName(text, memberId);
+      if (med) {
+        // Найти БЛИЖАЙШЕЕ время приёма к текущему моменту
+        const now = new Date();
+        const nowMinutes = now.getHours() * 60 + now.getMinutes();
+        const times = med.times || ['08:00'];
+        let closestTime = times[0];
+        let minDiff = Infinity;
+        for (const t of times) {
+          const [h, m] = t.split(':').map(Number);
+          const tMin = h * 60 + m;
+          const diff = Math.abs(tMin - nowMinutes);
+          if (diff < minDiff) { minDiff = diff; closestTime = t; }
+        }
+        // Проверить не записано ли уже это конкретное время сегодня
+        const today = new Date().toISOString().split('T')[0];
+        const { data: existing } = await db.from('medication_logs').select('*')
+          .eq('medication_id', med.id).eq('member_id', memberId)
+          .eq('status','taken').eq('scheduled_time', closestTime)
+          .gte('created_at', today+'T00:00:00');
+        if (!existing || existing.length === 0) {
+          await db.from('medication_logs').insert({medication_id:med.id, member_id:memberId, scheduled_time:closestTime, taken_at:now.toISOString(), status:'taken'});
+        }
+        showToast('✓ '+med.name+' ('+closestTime+') — принято!');
+      } else {
+        showToast('✓ Лекарство записано!');
+      }
+      resetVoice();
+      // Обновить экран если открыта карточка
+      if (state.currentScreen === 'member' && state.currentMemberId) {
+        openMember(state.currentMemberId, document.getElementById('member-title').textContent);
+      }
+      return;
+    }
+
+    // Проверить: это показатель?
+    const metric = extractMetric(text);
+    if (metric) {
+      await db.from('health_metrics').insert({member_id:memberId, type:metric.type, value_primary:metric.value_primary, value_secondary:metric.value_secondary||null, unit:metric.unit, note:text});
+      showToast('✓ Показатель сохранён!');
+    } else {
+      showToast('✓ Сохранено!');
+    }
     resetVoice();
   } catch(e) { showToast('Ошибка: '+e.message); }
 }
@@ -735,7 +878,104 @@ function resetVoice() {
 }
 
 // --- PDF ---
-function generatePDF() { showToast('PDF · подключите Make.com webhook'); }
+async function generatePDF() {
+  showToast('Подготовка отчёта...');
+  try {
+    // Загрузить все данные
+    const { data: members } = await db.from('members').select('*').eq('family_id', FAMILY_ID);
+    const { data: metrics } = await db.from('health_metrics').select('*').order('recorded_at', {ascending: true});
+    const { data: logs } = await db.from('medication_logs').select('*, medications(name, dosage)').eq('status','taken').order('created_at', {ascending: true});
+
+    const memberName = members?.find(m => m.id === PAPA_ID)?.name || 'Пациент';
+    const today = new Date().toLocaleDateString('ru-RU', {day:'numeric', month:'long', year:'numeric'});
+
+    const ICONS = {temperature:'🌡️', pressure:'❤️', pulse:'💓', sugar:'🩸', wellbeing:'😊'};
+    const NAMES = {temperature:'Температура', pressure:'Давление', pulse:'Пульс', sugar:'Сахар', wellbeing:'Самочувствие'};
+    const UNITS = {temperature:'°C', pressure:'мм рт.ст.', pulse:'уд/мин', sugar:'ммоль/л', wellbeing:'/10'};
+
+    // Сформировать HTML отчёт
+    let metricsRows = '';
+    for (const m of (metrics || [])) {
+      const val = m.type === 'pressure' ? m.value_primary + '/' + m.value_secondary : m.value_primary;
+      const date = new Date(m.recorded_at).toLocaleDateString('ru-RU', {day:'numeric', month:'short', hour:'2-digit', minute:'2-digit'});
+      metricsRows += `<tr><td>${date}</td><td>${ICONS[m.type]||''} ${NAMES[m.type]||m.type}</td><td><b>${val}</b> ${UNITS[m.type]||''}</td><td>${m.note||''}</td></tr>`;
+    }
+
+    let medsRows = '';
+    for (const l of (logs || [])) {
+      const date = new Date(l.created_at).toLocaleDateString('ru-RU', {day:'numeric', month:'short', hour:'2-digit', minute:'2-digit'});
+      medsRows += `<tr><td>${date}</td><td>💊 ${l.medications?.name||'Лекарство'}</td><td>${l.medications?.dosage||''}</td><td>${l.scheduled_time||''}</td></tr>`;
+    }
+
+    const html = `<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Сводка данных · ${memberName}</title>
+<style>
+  body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; color: #333; }
+  h1 { color: #2D5A3D; border-bottom: 2px solid #6B8F71; padding-bottom: 10px; }
+  h2 { color: #3D5C42; margin-top: 30px; }
+  .header-info { background: #F0F8F0; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
+  table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+  th { background: #6B8F71; color: white; padding: 10px; text-align: left; }
+  td { padding: 8px 10px; border-bottom: 1px solid #E8E0D4; }
+  tr:nth-child(even) { background: #F5F0E8; }
+  .footer { margin-top: 40px; font-size: 12px; color: #9E9890; border-top: 1px solid #E8E0D4; padding-top: 10px; }
+  @media print { button { display: none; } }
+</style>
+</head>
+<body>
+<h1>🌿 FamilyPulse · Сводка данных</h1>
+<div class="header-info">
+  <b>Пациент:</b> ${memberName}<br>
+  <b>Дата отчёта:</b> ${today}<br>
+  <b>Период:</b> все доступные данные
+</div>
+
+<h2>📊 Показатели здоровья</h2>
+${metricsRows ? `<table><thead><tr><th>Дата и время</th><th>Показатель</th><th>Значение</th><th>Заметка</th></tr></thead><tbody>${metricsRows}</tbody></table>` : '<p>Данные не записаны</p>'}
+
+<h2>💊 Приём лекарств</h2>
+${medsRows ? `<table><thead><tr><th>Дата и время</th><th>Лекарство</th><th>Дозировка</th><th>Время приёма</th></tr></thead><tbody>${medsRows}</tbody></table>` : '<p>Данные не записаны</p>'}
+
+<div class="footer">
+  Сводка данных сформирована приложением FamilyPulse · ${today}
+</div>
+<scr' + 'ipt>window.print();</scr' + 'ipt>
+</body>
+</html>`;
+
+    // Скачать как HTML файл (работает на iOS и Android)
+    const blob = new Blob([html], {type: 'text/html;charset=utf-8'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'FamilyPulse_' + new Date().toLocaleDateString('ru-RU').replace(/\./g,'-') + '.html';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showToast('✓ Отчёт скачан!');
+
+  } catch(e) {
+    showToast('Ошибка: ' + e.message);
+  }
+}
+
+
+// --- ПАРОЛЬ ---
+function checkPwd() {
+  const input = document.getElementById('pwd-input').value;
+  const hash = btoa(unescape(encodeURIComponent(input)));
+  if (hash === btoa(unescape(encodeURIComponent('Мама…2026!')))) {
+    document.getElementById('password-screen').style.display = 'none';
+    localStorage.setItem('fp_auth', '1');
+  } else {
+    document.getElementById('pwd-error').style.display = 'block';
+    document.getElementById('pwd-input').value = '';
+  }
+}
 
 // --- TOAST ---
 function showToast(msg) {
@@ -745,26 +985,12 @@ function showToast(msg) {
 }
 
 // --- СТАРТ ---
-// --- ПАРОЛЬ ---
-function checkPwd() {
-  const input = document.getElementById('pwd-input').value;
-  const hash = btoa(unescape(encodeURIComponent(input)));
-  if (hash === btoa(unescape(encodeURIComponent('Мама2026!')))) {
-    document.getElementById('password-screen').style.display = 'none';
-    localStorage.setItem('fp_auth', '1');
-  } else {
-    document.getElementById('pwd-error').style.display = 'block';
-    document.getElementById('pwd-input').value = '';
-  }
-}
-
 window.addEventListener('load', () => {
-  if (sessionStorage.getItem('fp_auth') !== '1' && localStorage.getItem('fp_auth') !== '1') {
+  if (localStorage.getItem('fp_auth') !== '1') {
     document.getElementById('password-screen').style.display = 'flex';
   } else {
     document.getElementById('password-screen').style.display = 'none';
   }
-
   const name = localStorage.getItem('fp_name') || 'Татьяна';
   document.getElementById('ob-name').value = name;
   applyName(name);
