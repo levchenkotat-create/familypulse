@@ -494,7 +494,7 @@ async function loadMain() {
     }
 
     html += `<button class="btn btn-primary" style="margin-top:8px;" onclick="state.currentMemberId=PAPA_ID;goTo('voice')">
-      <svg width="20" height="20" viewBox="0 0 36 36" fill="none"><rect x="12" y="2" width="12" height="18" rx="6" fill="white"/><path d="M7 17C7 23.1 12 28 18 28C24 28 29 23.1 29 17" stroke="white" stroke-width="2.5" stroke-linecap="round"/></svg>
+      <svg width="20" height="20" viewBox="0 0 36 36" fill="none"><rect x="12" y="2" width="12" height="18" rx="6" fill="white"/><path d="M7 17C7 23.1 12 28 18 28C24 28 29 23.1 29 17" stroke="white" stroke-width="2.5" stroke-linecap="round"/><line x1="18" y1="28" x2="18" y2="33" stroke="white" stroke-width="2.5" stroke-linecap="round"/><line x1="13" y1="33" x2="23" y2="33" stroke="white" stroke-width="2.5" stroke-linecap="round"/></svg>
       Записать голосом
     </button>`;
     el.innerHTML = html;
@@ -712,16 +712,23 @@ function toggleRecording() {
   };
   state.recognition.onresult = (e) => {
     const text = e.results[0][0].transcript;
+    state.lastTranscript = text;
     parseText(text);
   };
   state.recognition.onerror = (e) => {
-    showToast('Ошибка: ' + e.error);
-    resetVoice();
+    if (e.error !== 'no-speech') showToast('Ошибка: ' + e.error);
+    state.isRecording = false;
+    document.getElementById('voice-mic-btn').classList.remove('recording');
+    document.getElementById('mic-label').textContent = 'Нажмите и говорите';
   };
   state.recognition.onend = () => {
     state.isRecording = false;
     document.getElementById('voice-mic-btn').classList.remove('recording');
     document.getElementById('mic-label').textContent = 'Нажмите и говорите';
+    if (state.lastTranscript) {
+      parseText(state.lastTranscript);
+      state.lastTranscript = null;
+    }
   };
   state.recognition.start();
 }
